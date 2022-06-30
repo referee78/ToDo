@@ -9,8 +9,13 @@ const tasksList = document.querySelector('#tasksList');
 const emptyList = document.querySelector('#emptyList');
 
 let tasks = [];
-checkEmptyList();
 
+if (localStorage.getItem('tasks')) {
+    tasks = JSON.parse(localStorage.getItem('tasks'));
+    tasks.forEach((task) => renderTask(task));
+}
+
+checkEmptyList();
 
 // Добавление задачи
 form.addEventListener('submit', addTask);
@@ -39,25 +44,7 @@ function addTask(event) {
     // Добавляем задачу в массив с задачами
     tasks.push(newTask);
 
-    // Формируем CSS класс 
-    const cssClass = newTask.done ? 'task-title task-title--done' : 'task-title';
-
-    // Формируем разметку для новой задачи
-    const taskHTML = `
-    <li id="${newTask.id}" class="list-group-item d-flex justify-content-between task-item">
-        <span class= "${cssClass}">${newTask.text}</span>
-        <div class="task-item__buttons">
-            <button type="button" data-action="done" class="btn-action">
-            <img src="./img/tick.svg" alt="Done" width="18" height="18">
-            </button>
-             <button type="button" data-action="delete" class="btn-action">
-            <img src="./img/cross.svg" alt="Done" width="18" height="18">
-            </button>
-         </div>
-    </li>`;
-
-    // Добовляем задачу на страницу
-    tasksList.insertAdjacentHTML('beforeend', taskHTML);
+    renderTask(newTask);
 
     // Очищаем поле ввода возвращаем на него фокус
     taskInput.value = '';
@@ -66,11 +53,13 @@ function addTask(event) {
 
     checkEmptyList();
 
+    saveToLocalStorage()
+
 }
 
 function deleteTask(event) {
 
-    // Проверяем что клик был не кнопке "Удалить задачу"
+    // Проверяем что клик был Не по кнопке "Удалить задачу"
     if (event.target.dataset.action !== 'delete') return;
 
     const parenNode = event.target.closest('.list-group-item');
@@ -81,7 +70,7 @@ function deleteTask(event) {
     // Находим индекс задачи в массиве
     const index = tasks.findIndex((task) => task.id === id);
 
-    // Удаляем задачу из массива
+    // Удаляем задачу из массива 
     tasks.splice(index, 1);
 
     /* 
@@ -93,6 +82,8 @@ function deleteTask(event) {
     parenNode.remove();
 
     checkEmptyList();
+
+    saveToLocalStorage();
 
 }
 
@@ -107,7 +98,9 @@ function doneTask(event) {
     task.done = !task.done;
 
     const taskTitle = parenNode.querySelector('.task-title');
-    taskTitle.classList.toggle('task-title--done')
+    taskTitle.classList.toggle('task-title--done');
+
+    saveToLocalStorage();
 
 }
 
@@ -129,3 +122,28 @@ function checkEmptyList() {
 
 }
 
+function saveToLocalStorage() {
+    localStorage.setItem('tasks', JSON.stringify(tasks))
+}
+
+function renderTask(task) {
+    // Формируем CSS класс 
+    const cssClass = task.done ? 'task-title task-title--done' : 'task-title';
+
+    // Формируем разметку для новой задачи
+    const taskHTML = `
+     <li id="${task.id}" class="list-group-item d-flex justify-content-between task-item">
+         <span class= "${cssClass}">${task.text}</span>
+         <div class="task-item__buttons">
+             <button type="button" data-action="done" class="btn-action">
+             <img src="./img/tick.svg" alt="Done" width="18" height="18">
+             </button>
+              <button type="button" data-action="delete" class="btn-action">
+             <img src="./img/cross.svg" alt="Done" width="18" height="18">
+             </button>
+          </div>
+     </li>`;
+
+    // Добовляем задачу на страницу
+    tasksList.insertAdjacentHTML('beforeend', taskHTML);
+}
